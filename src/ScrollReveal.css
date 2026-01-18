@@ -1,0 +1,6 @@
+/* src/ScrollReveal.css */
+.scroll-reveal-word {
+  display: inline-block; /* Agar bisa di-animasi */
+  white-space: pre;      /* Agar spasi antar kata tidak hilang */
+  will-change: opacity, filter, transform;
+}
