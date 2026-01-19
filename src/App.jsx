@@ -11,28 +11,23 @@ import Aurora from './Aurora'
 import Navbar from './Navbar'
 import ScrollReveal from './ScrollReveal'
 
+// Pastikan file firebase.js sudah dibuat sesuai instruksi sebelumnya
 import { auth, provider, db } from './firebase'; 
 import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
 
 // --- DATA ---
-// --- 1. DATA SKILLS ---
 const SKILLS = [
-  // HAPUS HTML (Terlalu basic), GANTI DENGAN AI LIBRARY
   { name: 'Scikit-Learn', color: '#F7931E', icon: '/assets/tools/scikit.png', desc: "Machine Learning" }, 
-  
   { name: 'CSS', color: '#1572B6', icon: '/assets/tools/css.png', desc: "Styling" },
   { name: 'JS', color: '#F7DF1E', icon: '/assets/tools/js.png', desc: "Logic" },
   { name: 'TS', color: '#3178C6', icon: '/assets/tools/ts.png', desc: "Type Safe" },
   { name: 'React', color: '#61DAFB', icon: '/assets/tools/reactjs.png', desc: "Frontend" },
-  
   { name: 'Next', color: '#ffffff', icon: '/assets/tools/nextjs.png', desc: "Framework" },
   { name: 'Tailwind', color: '#06B6D4', icon: '/assets/tools/tailwind.png', desc: "Styling" },
   { name: 'PostgreSQL', color: '#336791', icon: '/assets/tools/postgresql.png', desc: "Advanced Database" },
-  
   { name: 'PHP', color: '#777BB4', icon: '/assets/tools/php.png', desc: "Server" },
   { name: 'Laravel', color: '#FF2D20', icon: '/assets/tools/laravel.png', desc: "PHP Framework" },
-
   { name: 'MySQL', color: '#4479A1', icon: '/assets/tools/mysql.png', desc: "Database" },
   { name: 'Firebase', color: '#FFCA28', icon: '/assets/tools/firebase.png', desc: "BaaS" },
   { name: 'Figma', color: '#F24E1E', icon: '/assets/tools/figma.png', desc: "Design" },
@@ -41,11 +36,9 @@ const SKILLS = [
 ]
 
 const PROJECTS = [
-{
+  {
     title: "Todotify Pro",
-    // Deskripsi diperbaiki agar sesuai dengan Vanilla JS tapi tetap terdengar 'Advanced'
     desc: "Lightweight task management app with DOM Manipulation. Features persistent storage (LocalStorage) and dynamic theme switching.",
-    // GANTI TAGS DARI REACT KE JS NATIVE
     tags: ["JavaScript ES6", "CSS3", "LocalStorage", "DOM API"], 
     color: "purple",
     link: "https://mqordhowi0.github.io/CodingCamp-131025-Muhammad-Qordhowi-Abdurrahman/"
@@ -59,11 +52,8 @@ const PROJECTS = [
   },
   {
     title: "CS AI Hybrid",
-    // REVISI DI SINI:
-    // Ganti "NLP models" dengan "LLM/OpenAI".
-    // "Human-in-the-loop" adalah istilah keren untuk fitur oper ke operator.
     desc: "Smart support agent powered by OpenAI (LLM). Features RAG for document-based answers and automated handoff to human operators.",
-    tags: ["Laravel", "OpenAI API", "RAG", "Real-time"], // Tags diperbarui
+    tags: ["Laravel", "OpenAI API", "RAG", "Real-time"],
     color: "green",
     link: "https://github.com/mqordhowi0/sistem-layanan-cerdas"
   },
@@ -76,7 +66,7 @@ const PROJECTS = [
   }
 ]
 
-// --- COMPONENT: CUSTOM CURSOR (Optimized) ---
+// --- COMPONENT: CUSTOM CURSOR ---
 const CustomCursor = () => {
   const cursorRef = useRef(null)
   const trailerRef = useRef(null)
@@ -84,13 +74,19 @@ const CustomCursor = () => {
   useEffect(() => {
     const cursor = cursorRef.current
     const trailer = trailerRef.current
-    
     if(!cursor || !trailer) return
 
-    // Menggunakan requestAnimationFrame untuk performa lebih baik daripada event listener biasa
     let mouseX = 0, mouseY = 0
     let trailerX = 0, trailerY = 0
     
+    // Deteksi jika device touch (HP) untuk hide cursor custom
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+    if (isTouch) {
+        cursor.style.display = 'none'
+        trailer.style.display = 'none'
+        return
+    }
+
     const onMouseMove = (e) => {
       mouseX = e.clientX
       mouseY = e.clientY
@@ -106,7 +102,6 @@ const CustomCursor = () => {
 
     window.addEventListener('mousemove', onMouseMove)
     const animId = requestAnimationFrame(animateTrailer)
-
     return () => {
       window.removeEventListener('mousemove', onMouseMove)
       cancelAnimationFrame(animId)
@@ -117,7 +112,7 @@ const CustomCursor = () => {
     <>
       <div ref={cursorRef} className="fixed top-0 left-0 w-4 h-4 bg-white rounded-full mix-blend-difference pointer-events-none z-[9999]" />
       <div ref={trailerRef} className="fixed top-0 left-0 w-10 h-10 border border-cyan-400 rounded-full pointer-events-none z-[9998] opacity-50 shadow-[0_0_15px_rgba(34,211,238,0.8)]" />
-      <style>{`body { cursor: none; } a, button { cursor: pointer; }`}</style>
+      <style>{`@media (pointer: fine) { body { cursor: none; } a, button { cursor: pointer; } }`}</style>
     </>
   )
 }
@@ -162,12 +157,12 @@ const LoadingScreen = ({ started, setStarted }) => {
   )
 }
 
-// --- 3D KEYCAP (Reduced Complexity) ---
+// --- 3D KEYCAP (Mobile Support) ---
 const Keycap = memo(({ index, position, data, isActive, onActive, onInactive, animationState }) => {
   const texture = useTexture(data.icon)
   const meshRef = useRef()
   const { viewport } = useThree()
-  const isMobile = viewport.width < 5
+  const isMobile = viewport.width < 6 // Breakpoint mobile sedikit dinaikkan
   
   const physics = useMemo(() => ({
     position: new THREE.Vector3((Math.random() - 0.5) * 10, (Math.random() - 0.5) * 10, (Math.random() - 0.5) * 5),
@@ -199,17 +194,32 @@ const Keycap = memo(({ index, position, data, isActive, onActive, onInactive, an
     }
   })
 
-  // Perubahan: smoothness diturunkan dari 2 ke 1 untuk performa
+  // FAKTOR SKALA MOBILE (0.65 agar tidak mepet)
+  const mFactor = isMobile ? 0.65 : 1
+
   return (
     <motion.group animate={animationState} variants={{
       hero: { x: 0, y: 0, z: 0, scale: 0.5 },
       profile: { x: -3, y: 1, z: -4, scale: 0.5 },
-      skills: { x: position[0] * (isMobile ? 0.6 : 1), y: position[1] * (isMobile ? 0.6 : 1), z: position[2] * (isMobile ? 0.6 : 1), scale: 1 },
-      projects: { x: position[0] * (isMobile ? 0.6 : 1), y: position[1] * (isMobile ? 0.6 : 1), z: position[2] * (isMobile ? 0.6 : 1), scale: 1 },
-      guestbook: { x: position[0] * (isMobile ? 0.6 : 1), y: position[1] * (isMobile ? 0.6 : 1), z: position[2] * (isMobile ? 0.6 : 1), scale: 1 }
+      // Update posisi dan scale berdasarkan mobile factor
+      skills: { 
+        x: position[0] * mFactor, 
+        y: position[1] * mFactor, 
+        z: position[2] * mFactor, 
+        scale: 1 * mFactor 
+      },
+      projects: { x: position[0] * mFactor, y: position[1] * mFactor, z: position[2] * mFactor, scale: 1 * mFactor },
+      guestbook: { x: position[0] * mFactor, y: position[1] * mFactor, z: position[2] * mFactor, scale: 1 * mFactor }
     }} transition={{ duration: 1.0 }}>
       <group ref={meshRef}>
-        <mesh onPointerOver={(e) => { e.stopPropagation(); if(animationState === 'skills') onActive() }} onPointerOut={() => onInactive()} position={[0, isActive ? -0.15 : 0, 0]}>
+        <mesh 
+          // Event PC (Hover)
+          onPointerOver={(e) => { e.stopPropagation(); if(animationState === 'skills') onActive() }} 
+          onPointerOut={() => onInactive()} 
+          // Event Mobile (Click/Tap)
+          onClick={(e) => { e.stopPropagation(); if(animationState === 'skills') onActive() }}
+          position={[0, isActive ? -0.15 : 0, 0]}
+        >
           <RoundedBox args={[0.85, 0.4, 0.85]} radius={0.1} smoothness={1}> 
             <meshStandardMaterial color="#222" roughness={0.4} />
           </RoundedBox>
@@ -225,14 +235,16 @@ const Keycap = memo(({ index, position, data, isActive, onActive, onInactive, an
 
 const KeyboardChassis = memo(({ animationState }) => {
   const { viewport } = useThree()
-  const isMobile = viewport.width < 5
+  const isMobile = viewport.width < 6
+  const mobileScale = 0.65 
+
   return (
     <motion.group animate={animationState} variants={{
       hero: { scale: 0, opacity: 0 },
       profile: { scale: 0, opacity: 0 },
-      skills: { scale: isMobile ? 0.7 : 1, opacity: 1 },
-      projects: { scale: isMobile ? 0.7 : 1, opacity: 1 },
-      guestbook: { scale: isMobile ? 0.7 : 1, opacity: 1 }
+      skills: { scale: isMobile ? mobileScale : 1, opacity: 1 },
+      projects: { scale: isMobile ? mobileScale : 1, opacity: 1 },
+      guestbook: { scale: isMobile ? mobileScale : 1, opacity: 1 }
     }} transition={{ duration: 1 }} position={[0, -0.3, 0]}>
       <RoundedBox args={[4.8, 0.5, 3.0]} radius={0.2} smoothness={1}>
         <meshStandardMaterial color="#0a0a0a" roughness={0.1} metalness={0.9} />
@@ -245,31 +257,83 @@ const KeyboardChassis = memo(({ animationState }) => {
   )
 })
 
-const BongoCat = memo(({ animationState }) => (
-  <group position={[0, 0.63, 1.3]} rotation={[0, 0, -0.23]}>
-    <Html transform occlude pointerEvents="none">
-      <motionDom.div
-         animate={{ opacity: (animationState === 'projects' || animationState === 'guestbook') ? 1 : 0, scale: (animationState === 'projects' || animationState === 'guestbook') ? 1 : 0 }}
-         transition={{ duration: 0.5 }} style={{ width: '150px', height: '93px' }} 
-      >
-        <img src="/assets/bongo-cat.gif" alt="cat" className="w-full h-full object-contain" style={{ filter: 'drop-shadow(0 0 15px rgba(168, 85, 247, 0.6))', transform: 'scaleX(-1)' }} />
-      </motionDom.div>
-    </Html>
-  </group>
-))
+const BongoCat = memo(({ animationState }) => {
+  const { viewport } = useThree()
+  const isMobile = viewport.width < 6
+  // Penyesuaian posisi kucing di Mobile agar pas di atas keyboard yang mengecil
+  const pos = isMobile ? [0, 0.45, 0.8] : [0, 0.63, 1.3]
+
+  return (
+    <group position={pos} rotation={[0, 0, -0.23]}>
+      <Html transform occlude pointerEvents="none" scale={isMobile ? 0.7 : 1}>
+        <motionDom.div
+           animate={{ 
+             opacity: (animationState === 'projects' || animationState === 'guestbook') ? 1 : 0, 
+             scale: (animationState === 'projects' || animationState === 'guestbook') ? 1 : 0 
+           }}
+           transition={{ duration: 0.5 }} style={{ width: '150px', height: '93px' }} 
+        >
+          <img src="/assets/bongo-cat.gif" alt="cat" className="w-full h-full object-contain" style={{ filter: 'drop-shadow(0 0 15px rgba(168, 85, 247, 0.6))', transform: 'scaleX(-1)' }} />
+        </motionDom.div>
+      </Html>
+    </group>
+  )
+})
 
 const SceneContent = memo(({ setHoveredSkill, animationState }) => {
   const [activeKeyIndex, setActiveKeyIndex] = useState(null)
   const { viewport } = useThree()
-  const isMobile = viewport.width < 5
+  const isMobile = viewport.width < 6
+
+  // --- FITUR: AUTO HOVER UNTUK MOBILE ---
+  useEffect(() => {
+    // Hanya jalan jika Mobile DAN sedang di section Skills
+    if (isMobile && animationState === 'skills') {
+      const interval = setInterval(() => {
+        const randomIdx = Math.floor(Math.random() * SKILLS.length);
+        setActiveKeyIndex(randomIdx);
+        setHoveredSkill(SKILLS[randomIdx]);
+      }, 1500); // Ganti acak setiap 1.5 detik
+      return () => clearInterval(interval);
+    }
+  }, [isMobile, animationState, setHoveredSkill])
 
   return (
     <motion.group animate={animationState} variants={{
       hero: { scale: 1, x: 0, y: 0, z: 0, rotateX: 0, rotateY: 0, rotateZ: 0 },
       profile: { scale: 1, x: 0, y: 0, z: 0, rotateX: 0, rotateY: 0, rotateZ: 0 }, 
-      skills: { scale: 1, x: isMobile ? 0 : 2.5, y: isMobile ? 1 : -1.0, z: 0, rotateX: 0.6, rotateY: isMobile ? 0 : -0.2, rotateZ: isMobile ? 0 : 0.1 },
-      projects: { scale: 0.6, x: isMobile ? 0 : 3.5, y: -0.8, z: 0, rotateX: 0.1, rotateY: isMobile ? 0 : Math.PI - 0.4, rotateZ: 0 },
-      guestbook: { scale: 0.7, x: isMobile ? 0 : -3.5, y: -0.5, z: 0, rotateX: 0.2, rotateY: 0.4, rotateZ: 0 } 
+      
+      // SKILLS: 
+      // Mobile: X=0 (Tengah), Y=-1.8 (Turun ke Bawah), Rotasi SAMA dengan PC agar estetik
+      skills: { 
+        scale: 1, 
+        x: isMobile ? 0 : 2.5, 
+        y: isMobile ? -1.8 : -1.0, 
+        z: 0, 
+        rotateX: 0.6, 
+        rotateY: -0.2, // Rotasi disamakan
+        rotateZ: isMobile ? 0 : 0.1 
+      },
+
+      projects: { 
+        scale: 0.6, 
+        x: isMobile ? 0 : 3.5, 
+        y: isMobile ? -1.5 : -0.8, 
+        z: 0, 
+        rotateX: 0.1, 
+        rotateY: Math.PI - 0.4, 
+        rotateZ: 0 
+      },
+
+      guestbook: { 
+        scale: 0.7, 
+        x: isMobile ? 0 : -3.5, 
+        y: isMobile ? -2 : -0.5, 
+        z: 0, 
+        rotateX: 0.2, 
+        rotateY: 0.4, 
+        rotateZ: 0 
+      } 
     }} transition={{ duration: 0.8, ease: "easeInOut" }}>
       {SKILLS.map((skill, index) => {
         const col = index % 5
@@ -279,7 +343,7 @@ const SceneContent = memo(({ setHoveredSkill, animationState }) => {
             key={index} index={index} position={[(col - 2) * 0.9, 0, (row - 1) * 0.9]} 
             data={skill} isActive={activeKeyIndex === index}
             onActive={() => { setActiveKeyIndex(index); setHoveredSkill(skill) }}
-            onInactive={() => { if (activeKeyIndex === index) { setActiveKeyIndex(null); setHoveredSkill(null) }}}
+            onInactive={() => { if (!isMobile && activeKeyIndex === index) { setActiveKeyIndex(null); setHoveredSkill(null) }}}
             animationState={animationState}
           />
         )
@@ -290,10 +354,7 @@ const SceneContent = memo(({ setHoveredSkill, animationState }) => {
   )
 })
 
-// --- 4. VIEW 3D TERPISAH (KUNCI PERFORMA) ---
-// Kita pisahkan Canvas ke komponen yang di-memoize.
-// Component ini HANYA akan re-render jika `started`, `animationState`, atau `setHoveredSkill` berubah.
-// Perubahan scrollY di App TIDAK akan men-trigger render ulang di sini.
+// --- VIEW 3D WRAPPER ---
 const View3D = memo(({ started, animationState, setHoveredSkill }) => {
   return (
     <div className="fixed inset-0 z-0">
@@ -323,8 +384,7 @@ function App() {
       const viewportHeight = window.innerHeight
       let newState = 'hero'
       
-      // Logika state sederhana
-      if (y > viewportHeight * 0.5) newState = 'profile' // Trigger lebih cepat
+      if (y > viewportHeight * 0.5) newState = 'profile'
       if (y > viewportHeight * 1.5) newState = 'skills'
       if (y > viewportHeight * 3.5) newState = 'projects'
       if (y > viewportHeight * 6.5) newState = 'guestbook'
@@ -342,7 +402,6 @@ function App() {
       <Aurora colorStops={["#2b1055", "#7597de", "#000000"]} blend={0.6} amplitude={1.2} />
       <Navbar hidden={!started} />
 
-      {/* Render 3D Scene terpisah agar tidak re-render saat scrollY berubah */}
       <View3D started={started} animationState={animationState} setHoveredSkill={setHoveredSkill} />
 
       {started && <HtmlOverlay hoveredSkill={hoveredSkill} scrollY={scrollY} />}
@@ -380,7 +439,7 @@ const HtmlOverlay = memo(({ hoveredSkill, scrollY }) => {
             DIGITAL ARTISAN
           </ScrollReveal>
           <p className="text-xl md:text-2xl text-gray-400 font-light max-w-2xl mx-auto leading-relaxed">
-            Turning ideas <span className="text-cyan-400 font-medium">ideas</span> <br/>
+            Turning <span className="text-cyan-400 font-medium">ideas</span> <br/>
             into meaningful <span className="text-cyan-400 font-medium">web experiences.</span> <br/>
           </p>
           <div className="mt-12 animate-bounce">
@@ -414,20 +473,21 @@ const HtmlOverlay = memo(({ hoveredSkill, scrollY }) => {
         </motionDom.div>
       </section>
 
-      {/* SKILLS SECTION */}
+      {/* SKILLS SECTION - REVISED LAYOUT FOR MOBILE */}
       <section id="skills" className="h-[200vh] w-full relative">
-        <div className={`sticky top-0 h-screen w-full flex items-center px-6 md:px-20 transition-all duration-700 ${showSkills ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <div className="w-full max-w-lg relative z-10 pointer-events-none">
+        <div className={`sticky top-0 h-screen w-full flex flex-col md:flex-row md:items-center px-6 md:px-20 transition-all duration-700 ${showSkills ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          {/* Mobile: Teks Pindah ke Atas (pt-24), Desktop: Normal */}
+          <div className="w-full max-w-lg relative z-10 pointer-events-none mt-24 md:mt-0 text-center md:text-left">
              <ScrollReveal textClassName="text-sm font-bold text-gray-500 tracking-widest mb-2">ARSENAL</ScrollReveal>
              {hoveredSkill ? (
-               <motionDom.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} key={hoveredSkill.name} className="bg-zinc-900/90 backdrop-blur-2xl border border-white/10 p-8 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden mt-6">
+               <motionDom.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} key={hoveredSkill.name} className="bg-zinc-900/90 backdrop-blur-2xl border border-white/10 p-8 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden mt-2 mx-auto md:mx-0">
                   <div className="absolute top-0 right-0 w-40 h-40 blur-[80px] rounded-full opacity-30 pointer-events-none" style={{ backgroundColor: hoveredSkill.color }}></div>
                   <h1 className="text-5xl font-black text-white mb-2 tracking-tight">{hoveredSkill.name}</h1>
-                  <div className="h-1.5 w-16 rounded-full mb-6" style={{ backgroundColor: hoveredSkill.color }}></div>
+                  <div className="h-1.5 w-16 rounded-full mb-6 mx-auto md:mx-0" style={{ backgroundColor: hoveredSkill.color }}></div>
                   <p className="text-lg text-gray-300 font-light">{hoveredSkill.desc}</p>
                </motionDom.div>
              ) : (
-               <div className="mt-6">
+               <div className="mt-2 md:mt-6">
                  <h1 className="text-4xl md:text-6xl font-bold text-zinc-800">Select a Key</h1>
                  <p className="text-zinc-600 mt-2">Explore the technologies I use.</p>
                </div>
@@ -491,7 +551,6 @@ const GuestBookComponent = () => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  // 1. Cek Status Login User
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser)
@@ -499,7 +558,6 @@ const GuestBookComponent = () => {
     return () => unsubscribe()
   }, [])
 
-  // 2. Ambil Pesan Realtime dari Firestore
   useEffect(() => {
     const q = query(collection(db, "guestbook"), orderBy("createdAt", "desc"))
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -513,7 +571,6 @@ const GuestBookComponent = () => {
     return () => unsubscribe()
   }, [])
 
-  // 3. Fungsi Login Google
   const handleLogin = async () => {
     try {
       await signInWithPopup(auth, provider)
@@ -522,7 +579,6 @@ const GuestBookComponent = () => {
     }
   }
 
-  // 4. Fungsi Kirim Pesan
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!input.trim() || !user) return
@@ -530,18 +586,17 @@ const GuestBookComponent = () => {
     try {
       await addDoc(collection(db, "guestbook"), {
         text: input,
-        name: user.displayName, // Nama dari Google
+        name: user.displayName, 
         uid: user.uid,
-        photo: user.photoURL, // Foto Profil Google
-        createdAt: serverTimestamp() // Waktu Server
+        photo: user.photoURL, 
+        createdAt: serverTimestamp() 
       })
-      setInput("") // Reset input
+      setInput("") 
     } catch (error) {
       console.error("Gagal kirim pesan:", error)
     }
   }
 
-  // Helper untuk format tanggal
   const formatDate = (timestamp) => {
     if (!timestamp) return "Just now"
     const date = timestamp.toDate()
@@ -550,7 +605,6 @@ const GuestBookComponent = () => {
 
   return (
     <div className="flex flex-col h-[350px]">
-      {/* HEADER LOGOUT (Muncul jika login) */}
       {user && (
         <div className="flex justify-between items-center mb-4 px-1">
           <div className="flex items-center gap-2">
@@ -560,8 +614,6 @@ const GuestBookComponent = () => {
           <button onClick={() => signOut(auth)} className="text-xs text-red-400 hover:text-red-300 transition">Logout</button>
         </div>
       )}
-
-      {/* LIST PESAN */}
       <div className="flex-1 overflow-y-auto mb-4 space-y-3 pr-2 custom-scrollbar">
         {loading ? (
           <p className="text-center text-gray-500 text-xs animate-pulse">Loading messages...</p>
@@ -586,8 +638,6 @@ const GuestBookComponent = () => {
           ))
         )}
       </div>
-
-      {/* FORM INPUT / LOGIN BUTTON */}
       {user ? (
         <form onSubmit={handleSubmit} className="flex gap-2">
           <input 
