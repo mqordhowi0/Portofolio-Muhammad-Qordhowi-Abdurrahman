@@ -11,7 +11,7 @@ import Aurora from './Aurora'
 import Navbar from './Navbar'
 import ScrollReveal from './ScrollReveal'
 
-// Pastikan file firebase.js sudah dibuat sesuai instruksi sebelumnya
+// Pastikan file firebase.js sudah dibuat di folder src
 import { auth, provider, db } from './firebase'; 
 import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
@@ -79,7 +79,7 @@ const CustomCursor = () => {
     let mouseX = 0, mouseY = 0
     let trailerX = 0, trailerY = 0
     
-    // Deteksi jika device touch (HP) untuk hide cursor custom
+    // Deteksi touch device agar cursor custom hilang di HP
     const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
     if (isTouch) {
         cursor.style.display = 'none'
@@ -157,16 +157,16 @@ const LoadingScreen = ({ started, setStarted }) => {
   )
 }
 
-// --- 3D KEYCAP (Mobile Support) ---
+// --- 3D KEYCAP (FIXED: ANTI-TREMOR) ---
 const Keycap = memo(({ index, position, data, isActive, onActive, onInactive, animationState }) => {
   const texture = useTexture(data.icon)
   const meshRef = useRef()
   const { viewport } = useThree()
-  const isMobile = viewport.width < 6 // Breakpoint mobile sedikit dinaikkan
+  const isMobile = viewport.width < 6 // Breakpoint mobile
   
   const physics = useMemo(() => ({
     position: new THREE.Vector3((Math.random() - 0.5) * 10, (Math.random() - 0.5) * 10, (Math.random() - 0.5) * 5),
-    velocity: new THREE.Vector3((Math.random() - 0.5) * 0.05, (Math.random() - 0.5) * 0.05, (Math.random() - 0.5) * 0.02),
+    velocity: new THREE.Vector3((Math.random() - 0.5) * 0.03, (Math.random() - 0.5) * 0.03, (Math.random() - 0.5) * 0.01),
     rotVelocity: new THREE.Vector3((Math.random() - 0.5) * 0.02, (Math.random() - 0.5) * 0.02, (Math.random() - 0.5) * 0.02)
   }), [])
 
@@ -176,13 +176,18 @@ const Keycap = memo(({ index, position, data, isActive, onActive, onInactive, an
     if (animationState === 'hero' || animationState === 'profile') {
       const { width, height } = state.viewport
       physics.position.add(physics.velocity)
+      
+      // Boundary check (pantul dinding)
       if (physics.position.x > width / 2 || physics.position.x < -width / 2) physics.velocity.x *= -1
       if (physics.position.y > height / 2 || physics.position.y < -height / 2) physics.velocity.y *= -1
       if (physics.position.z > 2 || physics.position.z < -5) physics.velocity.z *= -1
 
-      const mouseVec = new THREE.Vector3(state.pointer.x * width / 2, state.pointer.y * height / 2, 0)
-      if (physics.position.distanceTo(mouseVec) < 3) {
-        physics.velocity.add(new THREE.Vector3().subVectors(physics.position, mouseVec).normalize().multiplyScalar(0.015))
+      // LOGIKA ANTI-TREMOR: Mouse Repulsion HANYA aktif jika BUKAN Mobile
+      if (!isMobile) {
+        const mouseVec = new THREE.Vector3(state.pointer.x * width / 2, state.pointer.y * height / 2, 0)
+        if (physics.position.distanceTo(mouseVec) < 3) {
+          physics.velocity.add(new THREE.Vector3().subVectors(physics.position, mouseVec).normalize().multiplyScalar(0.015))
+        }
       }
 
       meshRef.current.position.copy(physics.position)
@@ -260,7 +265,7 @@ const KeyboardChassis = memo(({ animationState }) => {
 const BongoCat = memo(({ animationState }) => {
   const { viewport } = useThree()
   const isMobile = viewport.width < 6
-  // Penyesuaian posisi kucing di Mobile agar pas di atas keyboard yang mengecil
+  // Posisi kucing disesuaikan saat mobile agar pas duduk di atas keyboard
   const pos = isMobile ? [0, 0.45, 0.8] : [0, 0.63, 1.3]
 
   return (
